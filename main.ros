@@ -205,9 +205,16 @@ install() {
     
     str _ = sinput("got it? [y/y]");
 
-    run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-applications kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    CONFIRM = "";
+    CONFIRM = sinput("[F]ull KDE + apps, just [L]ight kde install, or [N]o Desktop Environment?");
 
-    system("artix-chroot /mnt rc-update add sddm default");
+    if strcmp(tal(CONFIRM), "f") == 0 {
+        install_kde(true);
+    } else if strcmp(tal(CONFIRM), "l") == 0 {
+        install_kde(false);
+    } else {
+        run_cmd("artix-chroot /mnt pacman -S networkmanager networkmanager-openrc nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    }
     system("artix-chroot /mnt rc-update add NetworkManager default");
 
     CONFIRM = "";
@@ -218,6 +225,16 @@ install() {
     if strcmp(tal(CONFIRM), "y") == 0 {
         system("sudo reboot");
     }
+}
+
+install_kde(bool full) {
+    if full {
+        run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-applications kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    } else {
+        run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    }
+
+    system("artix-chroot /mnt rc-update add sddm default");
 }
 
 run_cmd(str command, str errormessage) {
