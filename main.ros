@@ -52,6 +52,9 @@ continue_install() {
     system("sudo grep -q '^ILoveCandy' /etc/pacman.conf || sudo sed -i '/^Color/a ILoveCandy' /etc/pacman.conf");
     system("sudo grep -q '^\\[lib32\\]' /etc/pacman.conf || printf '\\n[lib32]\\nInclude = /etc/pacman.d/mirrorlist\\n' | sudo tee -a /etc/pacman.conf > /dev/null");
 
+    system("sudo pacman -Sy");    
+    system("sudo pacman -S --needed pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio bluez bluez-utils bluez-openrc bluedevil alsa-ucm-conf alsa-card-profiles alsa-utils");
+
     CONFIRM = "";
     CONFIRM = sinput("[F]astfetch (regular), [H]yfetch (pride version), [B]oth, or [N]one? ");
     system("sudo pacman -Sy");
@@ -74,12 +77,17 @@ continue_install() {
     system("sudo rc-update add dbus default");
     system("sudo rc-update add elogind default");
     system("sudo rc-update add NetworkManager default");
-    system("sudo rc-update add bluetooth default");
+    system("sudo rc-update add bluetoothd default");
 
     system("sudo rc-service dbus start");
     system("sudo rc-service elogind start");
     system("sudo rc-service NetworkManager start");
-    system("sudo rc-service bluetooth start");
+    system("sudo rc-service bluetoothd start");
+
+    system("mkdir -p /home/$USER/.config/autostart");
+    system("printf '[Desktop Entry]\\nType=Application\\nName=PipeWire\\nExec=pipewire\\n' > /home/$USER/.config/autostart/pipewire.desktop");
+    system("printf '[Desktop Entry]\\nType=Application\\nName=PipeWire Pulse\\nExec=pipewire-pulse\\n' > /home/$USER/.config/autostart/pipewire-pulse.desktop");
+    system("printf '[Desktop Entry]\\nType=Application\\nName=WirePlumber\\nExec=wireplumber\\n' > /home/$USER/.config/autostart/wireplumber.desktop");
 
     printf("\nGOOD NEWS! FINISHED THE INSTALL! Enjoy!\n");
     CONFIRM = sinput("Are you Lunya? [y/n] ");
@@ -193,11 +201,11 @@ install() {
     run_cmd("artix-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg", "Failed to make config");
 
     printf("Recommended inputs for the command below. NOTE OR SCREEN SHOT THIS PLEASE.\n");
-    printf("please select pipewire-jack instead of jack2. Everything else, default.");
+    printf("please select pipewire-jack instead of jack2 and MAKE SURE Tessaract matches your language.\nEverything else, default.");
     
-    str _ = sinput("got it?");
+    str _ = sinput("got it? [y/y]");
 
-    run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-applications-meta kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-applications kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
 
     system("artix-chroot /mnt rc-update add sddm default");
     system("artix-chroot /mnt rc-update add NetworkManager default");
@@ -208,7 +216,7 @@ install() {
     CONFIRM = sinput("would you like to reboot? [y/n] ");
 
     if strcmp(tal(CONFIRM), "y") == 0 {
-        system("reboot");
+        system("sudo reboot");
     }
 }
 
