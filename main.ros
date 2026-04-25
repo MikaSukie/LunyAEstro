@@ -1,6 +1,6 @@
-""""
-Rosaline LunyAEstro Install Script
-""""
+/*
+ * Rosaline LunyAEstro Install Script
+ */
 
 nomd str NULL = (void*)0;
 opaque FILE;
@@ -68,6 +68,18 @@ continue_install() {
 
     system("printf 'NAME=\"LunyAEstro Linux\"\nPRETTY_NAME=\"LunyAEstro\"\nID=lunyaestro\nBUILD_ID=rolling\nANSI_COLOR=\"1;35\"\nLOGO=LunyAEstro\n' | sudo tee /etc/os-release > /dev/null");
     system("cd /usr/share/icons/hicolor/scalable/apps/ && sudo wget https://raw.githubusercontent.com/MikaSukie/LunyAEstro/main/LunyAEstro.png");
+    
+    printf("ENABLING SERVICES (OpenRC)\n");
+
+    system("sudo rc-update add dbus default");
+    system("sudo rc-update add elogind default");
+    system("sudo rc-update add NetworkManager default");
+    system("sudo rc-update add bluetooth default");
+
+    system("sudo rc-service dbus start");
+    system("sudo rc-service elogind start");
+    system("sudo rc-service NetworkManager start");
+    system("sudo rc-service bluetooth start");
 
     printf("\nGOOD NEWS! FINISHED THE INSTALL! Enjoy!\n");
     CONFIRM = sinput("Are you Lunya? [y/n] ");
@@ -185,7 +197,7 @@ install() {
     
     str _ = sinput("got it?");
 
-    run_cmd("artix-chroot /mnt pacman -S plasma-meta sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+    run_cmd("artix-chroot /mnt pacman -S plasma-meta kde-applications-meta kde-system-meta kio-admin kio-extras ark pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack bluez bluez-utils bluez-openrc bluedevil sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
 
     system("artix-chroot /mnt rc-update add sddm default");
     system("artix-chroot /mnt rc-update add NetworkManager default");
