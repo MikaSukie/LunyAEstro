@@ -1,0 +1,219 @@
+""""
+Rosaline LunyAEstro Install Script
+""""
+
+nomd str NULL = (void*)0;
+opaque FILE;
+extern stdout FILE*;
+
+extern snprintf(nomd str buffer, i32 size_t, nomd str format,) i32;
+extern exit(i32 code) void;
+extern printf(str character_stream,) i32;
+extern fflush(FILE* file) void;
+extern strcmp(str a, str b) i32;
+extern fputs(str string, FILE *stream) i32;
+
+extern tal(str s) str;
+extern is_ascii(str s) i32; 
+
+extern run_command(str command) i64;
+extern system(str command) i32;
+
+extern sinput(str s) str;
+extern wait(i64 time) void;
+
+unsafe extern getenv(nomd str s) str;
+
+main() {
+    printf("Welcome to the LunyAEstro Installer!\n");
+    printf("  _                           _    _____      _\n | |   _   _  _ __   _   _   / \\  | ____|___ | |_ _ __ ___\n | |  | | | || '_ \\ | | | | / _ \\ |  _| / __|| __| ,__/ _ \\\n | |__| |_| || | | || |_| |/ ___ \\| |___\\__ \\| |_| | | (_) |\n |_____\\__,_||_| |_| \\__, /_/   \\_\\_____|___/ \\__|_|  \\___/\n                     |___/\n             ~ THE Distro for BASED people. ~\n");
+    str res = sinput("continue, start, or exit?: [c/s/e] ");
+    if strcmp(res, "s") == 0 {
+        install();
+    } else if strcmp(res, "c") == 0 {
+        continue_install();
+    } else {
+        printf("quitting.\n");
+        exit(0);
+    }
+}
+
+continue_install() {
+    str DEFAULTUSER = getenv("USER");
+
+    printf("Continuation must be done on either a clean or minimal install.\n");
+    str CONFIRM = sinput("Are you sure you want to continue? [y/n] ");
+    if strcmp(tal(CONFIRM), "y") == 0 {}
+    else { printf("User quitted."); exit(0); }
+
+    printf("CONFIGURING PACMAN\n");
+    system("sudo sed -i 's/^ParallelDownloads = 5/ParallelDownloads = 8/' /etc/pacman.conf");
+    system("sudo sed -i 's/^#Color/Color/' /etc/pacman.conf");
+    system("sudo sed -i '/^Color/a ILoveCandy' /etc/pacman.conf");
+    system("printf '\\n[lib32]\\nInclude = /etc/pacman.d/mirrorlist\\n' | sudo tee -a /etc/pacman.conf > /dev/null");
+
+    CONFIRM = "";
+    CONFIRM = sinput("[F]astfetch (regular), [H]yfetch (pride version), [B]oth, or [N]one? ");
+    system("sudo pacman -Sy");
+
+    if strcmp(tal(CONFIRM), "f") == 0 {
+        install_fastfetch(DEFAULTUSER);
+    } else if strcmp(tal(CONFIRM), "h") == 0 {
+        install_hyfetch(DEFAULTUSER);
+    } else if strcmp(tal(CONFIRM), "b") == 0 {
+        install_fastfetch(DEFAULTUSER);
+        install_hyfetch(DEFAULTUSER);
+    } else {}
+    CONFIRM = "";
+
+    system("printf 'NAME=\"LunyAEstro Linux\"\nPRETTY_NAME=\"LunyAEstro\"\nID=lunyaestro\nBUILD_ID=rolling\nANSI_COLOR=\"1;35\"\nLOGO=LunyAEstro\n' | sudo tee /etc/os-release > /dev/null");
+    system("cd /usr/share/icons/hicolor/scalable/apps/ && sudo wget https://raw.githubusercontent.com/MikaSukie/LunyAEstro/main/LunyAEstro.png");
+
+    printf("\nGOOD NEWS! FINISHED THE INSTALL! Enjoy!\n");
+    CONFIRM = sinput("Are you Lunya? [y/n] ");
+    if strcmp(tal(CONFIRM), "y") == 0 {
+        system("git clone https://aur.archlinux.org/paru.git && cd paru && makepkg -si");
+        system("paru -Sy vlc vlc-plugins-all kdenlive libreoffice-fresh uv git obs-studio discord vencord-installer-bin steam qbittorrent wine wine-{gecko,mono} gnutls sdl2-compat gst-plugins-{base,good,bad,ugly} winetricks ffmpeg docker docker-compose docker-buildx php reflector nmap bind sshfs kdeconnect btop noto-fonts-{extra,emoji,cjk} krita teams-for-linux-bin ttf-jetbrains-mono-nerd hyfetch gwenview ark partitionmanager zip unzip downgrade nvm syncthing obsidian prismlauncher librewolf-bin gram-editor-bin 7z rar kcalc handbrake fluxer-bin pycharm prusa-slicer easyeffects yt-dlp parabolic blender kompare godot hyfetch fastfetch tenacity rar sqlitebrowser gram xclicker --noconfirm --needed && paru -Sy phantomjs python-{xattr,brotli,websockets,pycryptdome,mutagen,curl_cffi} aria2 atomicparsley noise-suppression-for-voice kimageformats lsp-plugins calf zam-plugins --needed --asdeps --noconfirm && paru -Sy catppuccin-plasma-colorscheme-mocha catppuccin-gtk-theme-mocha catppuccin-cursors-mocha kio-admin dolphin-plugins kde-inotify-survey kde-pim kcolorchooser kdialog kcalc kolourpaint okular plasma-systemmonitor filelight spectacle krita kolourpaint kwallet kwalletmanager --needed --noconfirm && paru -Sy cups cups-pdf print-manager system-config-printer epson-inkjet-printer-escpr{,2} --needed --noconfirm && paru -Sy --noconfirm --needed zsh zsh-completions && sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" && paru -Sy --noconfirm --needed vmware-keymaps vmware-workstation && sudo rc-update add vmware-networks default && sudo rc-update add vmware-usbarbitrator default && sudo rc-service vmware-networks start && sudo rc-service vmware-usbarbitrator start");
+    } else {
+        printf("\nok byeee!\n");
+        exit(0);
+    }
+}
+
+install_fastfetch(str DEFAULTUSER) {
+    system("sudo pacman -S fastfetch");
+    system("mkdir -p ~/.config/fastfetch && if [ -f ~/.config/fastfetch/config.jsonc ]; then fastfetch --gen-config /tmp/ff.jsonc >/dev/null 2>&1 && jq -s '.[0] * .[1]' ~/.config/fastfetch/config.jsonc /tmp/ff.jsonc > ~/.config/fastfetch/config.jsonc.tmp && mv ~/.config/fastfetch/config.jsonc.tmp ~/.config/fastfetch/config.jsonc || true; else fastfetch --gen-config ~/.config/fastfetch/config.jsonc; fi");
+    system("jq '.logo = {\"type\": \"file\", \"source\": \"~/.config/fastfetch/logo.txt\"}' ~/.config/fastfetch/config.jsonc > /tmp/ff.tmp && mv /tmp/ff.tmp ~/.config/fastfetch/config.jsonc");
+    system("cd /home/" + DEFAULTUSER + "/.config/fastfetch/ && wget https://raw.githubusercontent.com/MikaSukie/LunyAEstro/main/logo.txt");
+}
+
+install_hyfetch(str DEFAULTUSER) {
+    system("sudo pacman -S hyfetch");
+    printf("Please Configure hyfetch!");
+    system("hyfetch");
+    wait(2000);
+    run_cmd("cd /home/" + DEFAULTUSER + "/.config/" + " && jq '.custom_ascii_path = \"/home/" + DEFAULTUSER + "/.config/fastfetch/logo.txt\"' hyfetch.json > tmp.json && mv tmp.json hyfetch.json", "Failed to install ascii config!");
+    printf("ASCII installed!");
+}
+
+install() {
+    printf("====WARNING! WILL WIP YOUR DRIVE====\n");
+    printf("You do need to manually partition your drives.\n");
+    printf("This is for customizability reasons\n\n");
+    
+    printf("Please answer the questions in just lsblk partition names.\n");
+    printf("EX: sda1 nvme0n1p1\n");
+
+    str boot = sinput("What is your boot drive? (EFI portion ~512MB) ");
+    str root = sinput("Root drive? (containing Home usually ext4) ");
+
+    printf("LAST CHANCE. ARE YOU SURE THESE DRIVES ARE CORRECT?\n");
+    printf("These are the drives I got from you.\nboot=%s\nroot=%s\n", boot, root);
+    printf("Please check against the list below.");
+    system("lsblk -f");
+    printf("\n");
+
+    str CONFIRM = sinput("Correct? [y/n] ");
+
+    if strcmp(tal(CONFIRM), "y") == 0 {
+        // continue on.
+    } else {
+        exit(0);
+    }
+
+    system("mkfs.fat -F32 /dev/" + boot);
+    system("mkfs.ext4 /dev/" + root);
+
+    system("mount /dev/" + root + " /mnt");
+    system("mkdir -p /mnt/boot/efi");
+    system("mount /dev/" + boot + " /mnt/boot/efi");
+
+    system("basestrap /mnt base base-devel openrc elogind-openrc linux linux-firmware nano curl");
+    system("fstabgen -U /mnt >> /mnt/etc/fstab");
+
+    system("cat /mnt/etc/fstab");
+
+    CONFIRM = sinput("Look correct? [y/n] ");
+
+    if strcmp(tal(CONFIRM), "y") == 0 {
+        // continue on.
+    } else {
+        printf("FSTAB DIDNT MATCH (according to user).");
+        exit(0);
+    }
+
+    str hostname = sinput("What do you want the hostname to be? ");
+
+    system("artix-chroot /mnt /bin/bash -c 'TZ=$(curl -fsS https://ipapi.co/timezone 2>/dev/null || echo UTC) && ln -sf \"/usr/share/zoneinfo/$TZ\" /etc/localtime && hwclock --systohc && echo '" + hostname + "' > /etc/hostname && echo \"127.0.1.1   " + hostname + ".localdomain " + hostname + "\" >> /etc/hosts'");
+
+    system("artix-chroot /mnt passwd");
+
+    str username;
+    CONFIRM = "";
+    while true {
+        username = sinput("username (lowercase ascii): ");
+        username = tal(username);
+
+        if is_ascii(username) < 1 {
+            printf("username non ascii");
+            exit(1);
+        }
+
+        run_cmd("artix-chroot /mnt useradd -mG wheel,audio,video,network -s /bin/bash " + username, "\nFailed to add user!");
+        run_cmd("artix-chroot /mnt passwd " + username, "\nFailed to set password");
+
+        CONFIRM = sinput("Done with user creation? [y/n] ");
+        if strcmp(tal(CONFIRM), "y") == 0 {
+            break;
+        }
+    }
+
+    system("artix-chroot /mnt /bin/bash -c \"echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/10-wheel.tmp\"");
+    system("artix-chroot /mnt chmod 440 /etc/sudoers.d/10-wheel.tmp");
+
+    run_cmd("artix-chroot /mnt visudo -cf /etc/sudoers.d/10-wheel.tmp", "\nSudo config invalid.");
+    run_cmd("artix-chroot /mnt mv /etc/sudoers.d/10-wheel.tmp /etc/sudoers.d/10-wheel", "\nFailed to install sudoers file.");
+
+    run_cmd("artix-chroot /mnt pacman -S grub efibootmgr --noconfirm", "Failed to install grub or efibootmgr");
+    run_cmd("artix-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LunyAEstro", "\nFailed to install bootloader");
+    run_cmd("artix-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg", "Failed to make config");
+
+    printf("Recommended inputs for the command below. NOTE OR SCREEN SHOT THIS PLEASE.\n");
+    printf("pipewire-jack, Noto Fonts, and again Noto Fonts.");
+    
+    str _ = sinput("got it?");
+
+    run_cmd("artix-chroot /mnt pacman -S plasma-meta sddm sddm-openrc networkmanager networkmanager-openrc konsole dolphin nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+
+    system("artix-chroot /mnt rc-update add sddm default");
+    system("artix-chroot /mnt rc-update add NetworkManager default");
+
+    CONFIRM = "";
+    printf("If you do reboot, after reboot run the continue option.");
+    CONFIRM = sinput("would you like to reboot? [y/n] ");
+
+    if strcmp(tal(CONFIRM), "y") == 0 {
+        system("reboot");
+    }
+}
+
+run_cmd(str command, str errormessage) {
+    i64 ERRORED = run_command(command);
+
+    if ERRORED != 0 {
+        printf(errormessage);
+        exit(1);
+    }
+}
+
+ansi(str s) void {
+    printf("\x1b[%s", s);
+}
+
+esc(str s) void {
+    printf("\x1b%s", s);
+}
+
+clear() void { ansi("3J"); ansi("2J"); home(); }
+home()  void { ansi("H");  }
+reset() void { ansi("0m"); }
