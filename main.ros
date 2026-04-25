@@ -93,7 +93,7 @@ install_hyfetch(str DEFAULTUSER) {
     system("hyfetch");
     wait(2000);
     run_cmd("cd /home/" + DEFAULTUSER + "/.config/" + " && jq '.custom_ascii_path = \"/home/" + DEFAULTUSER + "/.config/fastfetch/logo.txt\"' hyfetch.json > tmp.json && mv tmp.json hyfetch.json", "Failed to install ascii config!");
-    printf("ASCII installed!");
+    printf("\nASCII installed!");
 }
 
 install() {
@@ -120,6 +120,8 @@ install() {
     } else {
         exit(0);
     }
+
+    system("umount -R /mnt");
 
     system("mkfs.fat -F32 /dev/" + boot);
     system("mkfs.ext4 /dev/" + root);
