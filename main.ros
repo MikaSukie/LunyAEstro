@@ -5,6 +5,8 @@
 nomd str NULL = (void*)0;
 opaque FILE;
 extern stdout FILE*;
+extern stdin FILE*;
+extern stderr FILE*;
 
 extern snprintf(nomd str buffer, i32 size_t, nomd str format,) i32;
 extern exit(i32 code) void;
@@ -12,16 +14,11 @@ extern printf(str character_stream,) i32;
 extern fflush(FILE* file) void;
 extern strcmp(str a, str b) i32;
 extern fputs(str string, FILE *stream) i32;
-
-extern tal(str s) str;
-extern is_ascii(str s) i32; 
-
-extern run_command(str command) i64;
-extern system(str command) i32;
-
-extern sinput(str s) str;
-extern wait(i64 time) void;
-
+extern realloc(str ptr, i64 size) str;
+extern fgetc(FILE* stream) i32;
+extern tolower(i32 c) i32;
+extern system(str s) i32;
+extern nanosleep(void* req, void* rem) i32;
 extern geteuid() i32;
 
 unsafe extern getenv(nomd str s) str;
@@ -67,7 +64,7 @@ main() {
     printf("███╗   ███╗██╗██╗  ██╗ ██████╗ ███████╗\n████╗ ████║██║██║ ██╔╝██╔═══██╗██╔════╝\n██╔████╔██║██║█████╔╝ ██║   ██║███████╗\n██║╚██╔╝██║██║██╔═██╗ ██║   ██║╚════██║\n██║ ╚═╝ ██║██║██║  ██╗╚██████╔╝███████║\n╚═╝     ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝\n~~~~  THE Distro for BASED people. ~~~~\n");
 
     while true {
-        str init_res = sinput("Which init system? [openrc/runit/dinit]: ");
+        str init_res = input("Which init system? [openrc/runit/dinit]: ");
         init_system = tal(init_res);
         if strcmp(init_system, "openrc") == 0 {
             break;
@@ -80,7 +77,7 @@ main() {
         }
     }
 
-    str res = sinput("continue, start, or exit?: [c/s/e] ");
+    str res = input("continue, start, or exit?: [c/s/e] ");
     if strcmp(res, "s") == 0 {
         install();
     } else if strcmp(res, "c") == 0 {
@@ -95,10 +92,10 @@ continue_install() {
     str DEFAULTUSER = getenv("USER");
 
     printf("Continuation must be done on either a clean or minimal install.\n");
-    str CONFIRM = sinput("Are you sure you want to continue? [y/n] ");
+    str CONFIRM = input("Are you sure you want to continue? [y/n] ");
     if strcmp(tal(CONFIRM), "y") == 0 {}
     else { printf("User quitted."); exit(0); }
-
+    
     printf("CONFIGURING PACMAN\n");
     system("sudo sed -i 's/^ParallelDownloads = 5/ParallelDownloads = 8/' /etc/pacman.conf");
     system("sudo grep -q '^Color' /etc/pacman.conf || sudo sed -i 's/^#Color/Color/' /etc/pacman.conf");
@@ -109,7 +106,7 @@ continue_install() {
     system("sudo pacman -S --needed fuse2 pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio bluez bluez-utils " + init_pkg("bluez") + " bluedevil alsa-ucm-conf alsa-card-profiles alsa-utils zip unzip");
 
     CONFIRM = "";
-    CONFIRM = sinput("[F]astfetch (regular), [H]yfetch (pride version), [B]oth, or [N]one? ");
+    CONFIRM = input("[F]astfetch (regular), [H]yfetch (pride version), [B]oth, or [N]one? ");
     system("sudo pacman -Sy");
 
     if strcmp(tal(CONFIRM), "f") == 0 {
@@ -143,7 +140,7 @@ continue_install() {
     system("printf '[Desktop Entry]\\nType=Application\\nName=WirePlumber\\nExec=wireplumber\\n' > /home/$USER/.config/autostart/wireplumber.desktop");
 
     printf("\nGOOD NEWS! FINISHED THE INSTALL! Enjoy!\n");
-    CONFIRM = sinput("Are you Lunya? [y/n] ");
+    CONFIRM = input("Are you Lunya? [y/n] ");
     if strcmp(tal(CONFIRM), "y") == 0 {
         system("git clone https://aur.archlinux.org/paru.git && cd paru && makepkg -si");
         system("paru -Sy vlc vlc-plugins-all kdenlive libreoffice-fresh uv git obs-studio discord vencord-installer-bin steam qbittorrent wine wine-{gecko,mono} gnutls sdl2-compat gst-plugins-{base,good,bad,ugly} winetricks ffmpeg docker docker-compose docker-buildx php reflector nmap bind sshfs kdeconnect btop noto-fonts-{extra,emoji,cjk} krita teams-for-linux-bin ttf-jetbrains-mono-nerd hyfetch gwenview ark partitionmanager zip unzip downgrade nvm syncthing obsidian prismlauncher librewolf-bin gram-editor-bin 7z rar kcalc handbrake fluxer-bin pycharm prusa-slicer easyeffects yt-dlp parabolic blender kompare godot hyfetch fastfetch tenacity rar sqlitebrowser gram xclicker --noconfirm --needed && paru -Sy phantomjs python-{xattr,brotli,websockets,pycryptdome,mutagen,curl_cffi} aria2 atomicparsley noise-suppression-for-voice kimageformats lsp-plugins calf zam-plugins --needed --asdeps --noconfirm && paru -Sy catppuccin-plasma-colorscheme-mocha catppuccin-gtk-theme-mocha catppuccin-cursors-mocha kio-admin dolphin-plugins kde-inotify-survey kde-pim kcolorchooser kdialog kcalc kolourpaint okular plasma-systemmonitor filelight spectacle krita kolourpaint kwallet kwalletmanager --needed --noconfirm && paru -Sy cups cups-pdf print-manager system-config-printer epson-inkjet-printer-escpr{,2} --needed --noconfirm && paru -Sy --noconfirm --needed zsh zsh-completions && sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" && paru -Sy --noconfirm --needed vmware-keymaps vmware-workstation");
@@ -184,15 +181,15 @@ install() {
     printf("EX: sda1 (disks will be listed below)\n");
     system("lsblk -f");
 
-    str boot     = sinput("What is your boot drive? (EFI portion ~512MB) ");
-    str root     = sinput("Root drive? (ext4) ");
+    str boot     = input("What is your boot drive? (EFI portion ~512MB) ");
+    str root     = input("Root drive? (ext4) ");
 
     bool has_home  = false;
     str  home_part = "";
-    str  home_res  = sinput("Do you have a separate /home partition? [y/n] ");
+    str  home_res  = input("Do you have a separate /home partition? [y/n] ");
     if strcmp(tal(home_res), "y") == 0 {
         has_home  = true;
-        home_part = sinput("Home partition? (lsblk partition name) ");
+        home_part = input("Home partition? (lsblk partition name) ");
     }
 
     printf("LAST CHANCE. ARE YOU SURE THESE DRIVES ARE CORRECT?\n");
@@ -204,7 +201,7 @@ install() {
     system("lsblk -f");
     printf("\n");
 
-    str CONFIRM = sinput("Correct? [y/n] ");
+    str CONFIRM = input("Correct? [y/n] ");
 
     if strcmp(tal(CONFIRM), "y") == 0 {
         // continue on.
@@ -233,7 +230,7 @@ install() {
 
     system("cat /mnt/etc/fstab");
 
-    CONFIRM = sinput("Look correct? [y/n] ");
+    CONFIRM = input("Look correct? [y/n] ");
 
     if strcmp(tal(CONFIRM), "y") == 0 {
         // continue on.
@@ -242,7 +239,7 @@ install() {
         exit(0);
     }
 
-    str hostname = sinput("What do you want the hostname to be? ");
+    str hostname = input("What do you want the hostname to be? ");
 
     system("artix-chroot /mnt /bin/bash -c 'TZ=$(curl -fsS https://ipapi.co/timezone 2>/dev/null || echo UTC) && ln -sf \"/usr/share/zoneinfo/$TZ\" /etc/localtime && hwclock --systohc && echo '" + hostname + "' > /etc/hostname && echo \"127.0.1.1   " + hostname + ".localdomain " + hostname + "\" >> /etc/hosts'");
 
@@ -251,7 +248,7 @@ install() {
     str username;
     CONFIRM = "";
     while true {
-        username = sinput("username (lowercase ascii): ");
+        username = input("username (lowercase ascii): ");
         username = tal(username);
 
         if is_ascii(username) < 1 {
@@ -262,7 +259,7 @@ install() {
         run_cmd("artix-chroot /mnt useradd -mG wheel,audio,video,network -s /bin/bash " + username, "\nFailed to add user!");
         run_cmd("artix-chroot /mnt passwd " + username, "\nFailed to set password");
 
-        CONFIRM = sinput("Done with user creation? [y/n] ");
+        CONFIRM = input("Done with user creation? [y/n] ");
         if strcmp(tal(CONFIRM), "y") == 0 {
             break;
         }
@@ -281,30 +278,30 @@ install() {
     printf("Recommended inputs for the command below. NOTE OR SCREEN SHOT THIS PLEASE.\n");
     printf("please MAKE SURE Tessaract matches your language, and use NotoFonts.\nEverything else, default.\n");
 
-    str _ = sinput("Got it? [y/y] ");
+    str _ = input("Got it? [y/y] ");
 
     CONFIRM = "";
-    CONFIRM = sinput("[F]ull KDE + apps, just [L]ight kde install, or [N]o Desktop Environment? ");
+    CONFIRM = input("[F]ull KDE + apps, just [L]ight kde install, or [N]o Desktop Environment? ");
 
     if strcmp(tal(CONFIRM), "f") == 0 {
         install_kde(true);
     } else if strcmp(tal(CONFIRM), "l") == 0 {
         install_kde(false);
     } else {
-        run_cmd("artix-chroot /mnt pacman -S networkmanager " + init_pkg("networkmanager") + " nano fastfetch jq wget git bash-completion --needed", "\nSomething during the install went wrong");
+        run_cmd("artix-chroot /mnt pacman -S networkmanager " + init_pkg("networkmanager") + " nano fastfetch jq wget git bash-completion linux-headers --needed", "\nSomething during the install went wrong");
     }
     enable_service_chroot("NetworkManager");
 
     system("printf 'NAME=\"MikOS Linux\"\nPRETTY_NAME=\"MikOS\"\nID=MikOS\nBUILD_ID=rolling\nANSI_COLOR=\"1;35\"\nLOGO=MikOS\n' | sudo tee /mnt/etc/os-release > /dev/null");
 
-    str user_next = sinput("which user will you log-into after reboot? ");
+    str user_next = input("which user will you log-into after reboot? ");
     system("mv MikOS /mnt/home/" + tal(user_next) + "/MikOS");
 
     CONFIRM = "";
     printf("If you do reboot, after doing so run: nmcli device wifi connect \"<wifiname>\" password \"<password>\"\n");
     printf("After that run: ./LookieSukie\n");
 
-    CONFIRM = sinput("\nwould you like to reboot? [y/n] ");
+    CONFIRM = input("\nwould you like to reboot? [y/n] ");
 
     if strcmp(tal(CONFIRM), "y") == 0 {
         system("sudo reboot");
@@ -341,3 +338,149 @@ esc(str s) void {
 clear() void { ansi("3J"); ansi("2J"); home(); }
 home()  void { ansi("H");  }
 reset() void { ansi("0m"); }
+
+input(str prompt) str {
+    if prompt != NULL {
+        fputs(prompt, stdout);
+        fflush(stdout);
+    }
+
+    i64 cap = 128;
+    i64 len = 0;
+
+    str buf = malloc(cap);
+    if buf == NULL {
+        return NULL;
+    }
+
+    i32 ch;
+
+    while true {
+        ch = fgetc(stdin);
+
+        if ch == -1 || ch == '\n' {
+            break;
+        }
+
+        if len + 1 >= cap {
+            cap = cap * 2;
+
+            str tmp = realloc(buf, cap);
+            if tmp == NULL {
+                free(buf);
+                return NULL;
+            }
+
+            buf = tmp;
+        }
+
+        buf[len] = (char)ch;
+        len = len + 1;
+    }
+
+    buf[len] = '\0';
+    return buf;
+}
+
+wifexited(i32 s) bool {
+    return (s & 0x7f) == 0;
+}
+
+wexitstatus(i32 s) i32 {
+    return (s >> 8) & 0xff;
+}
+
+safe_strdup(str s) str {
+    if s == NULL {
+        return NULL;
+    }
+
+    i64 len = strlen(s) + 1;
+    str copy = malloc(len);
+
+    if copy == NULL {
+        return NULL;
+    }
+
+    memcpy(copy, s, len);
+    return copy;
+}
+
+print(str s) void {
+    if s != NULL {
+        fputs(s, stdout);
+    }
+}
+
+eprint(str s) void {
+    if s != NULL {
+        fputs(s, stderr);
+    }
+}
+
+tal(str s) str {
+    if s == NULL {
+        return NULL;
+    }
+
+    str result = safe_strdup(s);
+    if result == NULL {
+        return NULL;
+    }
+
+    i64 i = 0;
+    while result[i] != '\0' {
+        result[i] = (char)tolower(result[i]);
+        i = i + 1;
+    }
+
+    return result;
+}
+
+is_ascii(str s) i32 {
+    if s == NULL {
+        return 0;
+    }
+
+    i64 i = 0;
+
+    while s[i] != '\0' {
+        if (u8)s[i] > 0x7F {
+            return 0;
+        }
+        i = i + 1;
+    }
+
+    return 1;
+}
+
+run_command(str cmd) i64 {
+    if cmd == NULL {
+        return -1;
+    }
+
+    i32 status = system(cmd);
+
+    if status == -1 {
+        return -1;
+    }
+
+    if wifexited(status) {
+        return (i64)wexitstatus(status);
+    }
+
+    return -2;
+}
+
+wait(i64 millis) void {
+    if millis <= 0 {
+        return;
+    }
+
+    i64[2] ts;
+
+    ts[0] = millis / 1000;
+    ts[1] = (millis % 1000) * 1000000;
+
+    nanosleep(&ts[0], NULL);
+}
