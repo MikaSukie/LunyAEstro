@@ -55,7 +55,7 @@ continue_install() {
     system("sudo grep -q '^\\[lib32\\]' /etc/pacman.conf || printf '\\n[lib32]\\nInclude = /etc/pacman.d/mirrorlist\\n' | sudo tee -a /etc/pacman.conf > /dev/null");
 
     system("sudo pacman -Sy");    
-    system("sudo pacman -S --needed fuse2 spipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio bluez bluez-utils bluez-openrc bluedevil alsa-ucm-conf alsa-card-profiles alsa-utils zip unzip");
+    system("sudo pacman -S --needed fuse2 pipewire wireplumber pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio bluez bluez-utils bluez-openrc bluedevil alsa-ucm-conf alsa-card-profiles alsa-utils zip unzip");
 
     CONFIRM = "";
     CONFIRM = sinput("[F]astfetch (regular), [H]yfetch (pride version), [B]oth, or [N]one? ");
